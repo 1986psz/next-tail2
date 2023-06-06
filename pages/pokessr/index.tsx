@@ -1,12 +1,12 @@
-// import Box from '@mui/material/Box';
-import { useEffect, useState } from 'react';
-// import { Pagination, CircularProgress, ListItemButton, ListItemAvatar, Avatar, ListItemText, Container, List } from '@mui/material';
-// import { SportsBar } from '@mui/icons-material';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Pagination } from 'flowbite-react';
+import { PokeTable } from "../../ui/page-directory/components/PokeTable";
+import { Loading } from "../../ui/page-directory/components/Loading";
 
 const INITIAL_PAGE_NUMBER = 1;
 
 export default function MyList({ initialData }: any) {
-  const [isFirstRender, setIsFirstRender] = useState(true);
+  const isFirstRender = useRef(true);
   const [data, setData] = useState(initialData);
   const [isLoading, setIsLoading] = useState(false);
   const [page, setPage] = useState(INITIAL_PAGE_NUMBER);
@@ -30,46 +30,39 @@ export default function MyList({ initialData }: any) {
       }
     }
 
-    if (!isFirstRender) {
+    if (isFirstRender.current === false) {
       getData();
     }
 
-    setIsFirstRender(false);
+    isFirstRender.current = false;
   }, [page]);
 
   return (
     <div className="text-white">
       <div>
-        <h4>SSR</h4>
+        <h4 className="mb-4 text-2xl font-extrabold leading-none tracking-tight text-white text-center">SSR</h4>
         {isLoading ? (
-          <div>Loading...</div>
+          <div className="flex items-center justify-center w-full h-56 rounded-lg bg-black dark:bg-gray-800 dark:border-gray-700">
+            <Loading />
+          </div>
         ) : (
-          <div>
-            {data.map((beer: any) => (
-              <div key={beer.id} onClick={() => { }}>
-                {/* <div primary={beer.name} secondary={beer.url} /> */}
-                <span>{beer.name}</span>
-                <span>{beer.url}</span>
-              </div>
-            ))}
+          <div className="relative overflow-x-auto">
+            <PokeTable data={data} />
           </div>
         )}
-
-        <div>
-          {[1, 2, 3].map(item => (
-            <span onClick={() => { setPage(item) }}>{item}</span>
-          ))}
+        <div className="text-center mt-5">
+          <Pagination
+            layout="pagination"
+            currentPage={page}
+            onPageChange={(page) => setPage(page)}
+            totalPages={pagesCount}
+          />
         </div>
-        {/* <Pagination
-          count={pagesCount}
-          page={page}
-          onChange={(_event: React.ChangeEvent<unknown>, page: number) => {
-            setPage(page);
-          }}
-        /> */}
+
       </div>
     </div>
   );
+
 }
 
 
@@ -77,8 +70,6 @@ export default function MyList({ initialData }: any) {
 export async function getServerSideProps() {
   // Fetch data from external API
   try {
-    // const res = await fetch(`https://api.openbrewerydb.org/v1/breweries?page=${INITIAL_PAGE_NUMBER}&per_page=10`);
-    // const initialData = await res.json();
     const res = await fetch(`https://pokeapi.co/api/v2/pokemon/?limit=10&offset=${INITIAL_PAGE_NUMBER}`);
     const initialData = await res.json();
 
